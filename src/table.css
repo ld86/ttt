@@ -1,0 +1,15 @@
+.square {
+    width: 32px;
+    height: 32px;
+    background: white;
+    border: 1px solid black;
+    padding: 0px;
+    margin-right: -1px;
+    margin-top: -1px;
+    float: left;
+}
+
+.table-row {
+    clear: both;
+    display: table;
+}
