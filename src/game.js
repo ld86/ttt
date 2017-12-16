@@ -10,6 +10,15 @@ export class Game extends Component {
         return (
             <div>
                 <div>
+                    Draw: {this.props.scores[0]}
+                </div>
+                <div>
+                    X: {this.props.scores[1]}
+                </div>
+                <div>
+                    O: {this.props.scores[2]}
+                </div>
+                <div>
                     Next player is {[' ', 'X', 'O'][this.props.player]}
                 </div>
                 <Table
@@ -23,7 +32,7 @@ export class Game extends Component {
 
 Game = connect(
     (state) => {
-        return {player: state.game.player, table: state.game.table}
+        return {player: state.game.player, table: state.game.table, scores: state.game.scores}
 },
 (dispatch) => {
     return {
