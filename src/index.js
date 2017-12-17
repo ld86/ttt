@@ -24,7 +24,7 @@ store.subscribe(() => {
             if (state.game.bots.includes(state.game.player)) {
                 store.dispatch(botMove())
             }
-    }, 1)
+    }, 0)
 })
 
 persistStore(store)

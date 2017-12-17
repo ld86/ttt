@@ -33,37 +33,41 @@ function getWinner(table) {
     var winner = 0
 
     for (var i = 0; i < 3; i++) {
-        if (table[i][0] === table[i][1]
-            && table[i][1] === table[i][2])
+        if (table[i][0] !== 0 &&
+            table[i][0] === table[i][1] &&
+            table[i][1] === table[i][2])
         {
             winner = table[i][0]
             break
         }
-        if (table[0][i] === table[1][i]
-            && table[1][i] === table[2][i])
+        if (table[0][i] !== 0 &&
+            table[0][i] === table[1][i] &&
+            table[1][i] === table[2][i])
         {
             winner = table[0][i]
             break
         }
     }
 
-    if (table[0][0] === table[1][1]
-        && table[1][1] === table[2][2])
+    if (table[0][0] !== 0 &&
+        table[0][0] === table[1][1] &&
+        table[1][1] === table[2][2])
     {
         winner = table[0][0]
     }
 
-    if (table[0][2] === table[1][1]
-        && table[1][1] === table[2][0])
+    if (table[0][2] !== 0 &&
+        table[0][2] === table[1][1] &&
+        table[1][1] === table[2][0])
     {
         winner = table[0][2]
     }
-    
+
     return winner
 }
 
 function checkWinner(state) {
-    var outofmoves = true 
+    var outofmoves = true
 
     for (var i = 0; i < 3; i++) {
         for (var j = 0; j < 3; j++) {
@@ -83,7 +87,8 @@ function checkWinner(state) {
     return update(state, {
         'table': {$set: initialState.game.table},
         'scores': {[winner]: {$set: state.scores[winner] + 1}},
-        'winner': {$set: winner}
+        'winner': {$set: winner},
+        'previous': {$set: initialState.game.previous}
     })
 }
 
@@ -106,7 +111,7 @@ function stateValue(policy, table, player) {
     if (winner === (3 - player)) {
         return 0
     }
-    
+
     var filled = true;
     for (var i = 0; i < 3; i++) {
         for (var j = 0; j < 3; j++) {
@@ -114,11 +119,22 @@ function stateValue(policy, table, player) {
                 continue
             }
             filled = false;
-        } 
+
+            var state = {'table': table}
+
+            var nextState = update(state, {
+                'table': {[i]: {[j]: {$set: (3 - player)}}}
+            })
+
+            if (getWinner(nextState.table) === (3 - player)) {
+                return 0
+            }
+
+        }
     }
 
     if (filled) {
-        return 0;
+        return 0
     }
 
     var marshaledTable = marshalTable(table)
@@ -137,9 +153,8 @@ function updatePolicy(policy, previous, next, player) {
     var stateValuePrevious = stateValue(policy, previous, player)
     var stateValueNext = stateValue(policy, next, player)
 
-    policy[player][marshaledPrevious] = stateValuePrevious + 
-                                        0.1 * (stateValueNext - stateValuePrevious)
-
+    policy[player][marshaledPrevious] = stateValuePrevious +
+                                        0.25 * (stateValueNext - stateValuePrevious)
     console.log(marshaledPrevious)
     console.log(stateValuePrevious)
     console.log(marshaledNext)
@@ -157,28 +172,27 @@ function botMove(state) {
 
     var maxValue = 0
 
-    for (var k = 0; k < 20; k++) {
-        var i = randomInteger(0, 2)
-        var j = randomInteger(0, 2)
+    for (var i = 0; i < 3; i++) {
+        for (var j = 0; j < 3; j++) {
+            if (state.table[i][j] !== 0) {
+                continue
+            }
 
-        if (state.table[i][j] !== 0) {
-            continue
-        }
+            var nextState = update(state, {
+                'table': {[i]: {[j]: {$set: state.player}}}
+            })
 
-        var nextState = update(state, {
-            'table': {[i]: {[j]: {$set: state.player}}}
-        })
-
-        var nextStateValue = stateValue(state.policy, nextState.table, state.player)
-        if (nextStateValue > maxValue) {
-            row = i
-            column = j
-            maxValue = nextStateValue
+            var nextStateValue = stateValue(state.policy, nextState.table, state.player)
+            if (nextStateValue > maxValue) {
+                row = i
+                column = j
+                maxValue = nextStateValue
+            }
         }
     }
 
     nextState = update(state, {
-        'table': {[i]: {[j]: {$set: state.player}}}
+        'table': {[row]: {[column]: {$set: state.player}}}
     })
 
     updatePolicy(state.policy, state.previous[state.player], nextState.table, state.player, state.winner)
