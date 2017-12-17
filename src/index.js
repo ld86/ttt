@@ -8,7 +8,6 @@ import thunkMiddleware from 'redux-thunk'
 import { createStore, applyMiddleware, compose } from 'redux'
 
 import { autoRehydrate, persistStore } from 'redux-persist'
-import logger from 'redux-logger'
 
 import { App } from './app';
 
